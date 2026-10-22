@@ -56,7 +56,8 @@ els.registerBtn.addEventListener('click', () => {
 });
 
 els.editBtn.addEventListener('click', () => {
-  els.editTime.value = formatTime(getToday(records, new Date()));
+  // Suggest the current time: the usual correction is "I took it just now".
+  els.editTime.value = formatTime(new Date());
   els.editForm.hidden = false;
   els.editBtn.hidden = true;
 });

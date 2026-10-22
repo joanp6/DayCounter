@@ -1,7 +1,7 @@
 // Offline cache for the static files. Stale-while-revalidate: answer instantly
 // from cache (the NFC tap must feel immediate) and refresh the cache in the background.
 
-const CACHE = 'daycounter-v3';
+const CACHE = 'daycounter-v4';
 const FILES = [
   './',
   './index.html',
