@@ -5,6 +5,7 @@ const $ = (id) => document.getElementById(id);
 const els = {
   check: $('check'),
   message: $('message'),
+  warning: $('warning'),
   registerBtn: $('register-btn'),
   editBtn: $('edit-btn'),
   editForm: $('edit-form'),
@@ -14,6 +15,7 @@ const els = {
 };
 
 let records = load();
+let renderedDay = dayKey(new Date());
 
 function persist() {
   const ok = save(records);
@@ -23,10 +25,14 @@ function persist() {
 
 // mode: 'new' (just registered), 'duplicate' (NFC tap, already registered) or 'view'.
 function render(mode = 'view') {
-  const taken = getToday(records, new Date());
+  const now = new Date();
+  renderedDay = dayKey(now);
+  const taken = getToday(records, now);
   const time = taken && formatTime(taken);
 
-  els.check.textContent = taken ? '✅' : '';
+  const duplicate = taken && mode === 'duplicate';
+  els.check.textContent = duplicate ? '⚠️' : taken ? '✅' : '';
+  els.warning.hidden = !duplicate;
   if (!taken) els.message.textContent = 'Hoy: pendiente';
   else if (mode === 'new') els.message.textContent = `Registrado hoy a las ${time}`;
   else if (mode === 'duplicate') els.message.textContent = `Ya registrado hoy a las ${time}`;
@@ -64,9 +70,10 @@ els.editForm.addEventListener('submit', (event) => {
   render();
 });
 
-// The page may stay open past midnight: refresh the status when it comes back.
+// The page may stay open past midnight: refresh the status when it comes back on a new day.
+// Same day: keep what is shown, so the NFC result message isn't replaced.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
+  if (document.visibilityState === 'visible' && dayKey(new Date()) !== renderedDay) {
     records = load();
     render();
   }
