@@ -1,7 +1,7 @@
 // Offline cache for the static files. Stale-while-revalidate: answer instantly
 // from cache (the NFC tap must feel immediate) and refresh the cache in the background.
 
-const CACHE = 'daycounter-v2';
+const CACHE = 'daycounter-v3';
 const FILES = [
   './',
   './index.html',
@@ -15,7 +15,10 @@ const FILES = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
+  // cache: 'reload' skips the browser HTTP cache (GitHub Pages sends max-age=600),
+  // otherwise a new version could be filled with the old files.
+  const requests = FILES.map((file) => new Request(file, { cache: 'reload' }));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(requests)));
   self.skipWaiting();
 });
 
@@ -37,7 +40,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(key);
-      const network = fetch(request)
+      const network = fetch(key, { cache: 'no-cache' })
         .then((response) => {
           if (response.ok) cache.put(key, response.clone());
           return response;
