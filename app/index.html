@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DayCounter</title>
+  <meta name="theme-color" content="#1b7f4b">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <main>
+    <div id="check" class="check" aria-hidden="true"></div>
+    <h1 id="message"></h1>
+
+    <button id="register-btn" type="button" hidden>Registrar ahora</button>
+    <button id="edit-btn" type="button" class="secondary" hidden>Corregir hora</button>
+
+    <form id="edit-form" hidden>
+      <label for="edit-time">Nueva hora</label>
+      <input id="edit-time" type="time" required>
+      <button type="submit">Guardar</button>
+      <button id="cancel-btn" type="button" class="secondary">Cancelar</button>
+    </form>
+
+    <p id="error" class="error" role="alert" hidden></p>
+  </main>
+</body>
+</html>
