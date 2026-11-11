@@ -2,9 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DayCounter</title>
-  <meta name="theme-color" content="#1b7f4b">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Control sencillo de medicación y suplementos con registro NFC">
+  <title>Day Counter</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -12,22 +13,85 @@
   <script type="module" src="src/main.js"></script>
 </head>
 <body>
-  <main>
-    <div id="check" class="check" aria-hidden="true"></div>
-    <h1 id="message"></h1>
-    <p id="warning" class="warning" hidden>Ya había una toma registrada hoy. No se ha vuelto a registrar.</p>
+  <div class="app-shell">
+    <header class="topbar">
+      <div><p class="eyebrow">DAY COUNTER</p><h1 id="page-title">Hoy</h1></div>
+      <div id="today-badge" class="today-badge" aria-label="Fecha de hoy"></div>
+    </header>
 
-    <button id="register-btn" type="button" hidden>Registrar ahora</button>
-    <button id="edit-btn" type="button" class="secondary" hidden>Corregir hora</button>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <div id="storage-error" class="notice notice-error" role="alert" hidden>No se han podido guardar los cambios en este dispositivo.</div>
 
-    <form id="edit-form" hidden>
-      <label for="edit-time">Nueva hora</label>
-      <input id="edit-time" type="time" required>
-      <button type="submit">Guardar</button>
-      <button id="cancel-btn" type="button" class="secondary">Cancelar</button>
+    <main>
+      <section id="view-today" class="view active" aria-labelledby="page-title">
+        <div class="day-summary">
+          <div><span id="summary-icon" class="summary-icon" aria-hidden="true">☀️</span><p id="summary-title" class="summary-title"></p><p id="day-boundary" class="muted"></p></div>
+          <div id="summary-count" class="summary-count"></div>
+        </div>
+        <div id="reminder-list" class="stack"></div>
+        <div id="today-medications" class="stack"></div>
+        <div id="empty-today" class="empty-state" hidden><span aria-hidden="true">💊</span><h2>No hay tratamientos para hoy</h2><p>Puedes añadir uno desde la sección Tratamientos.</p></div>
+      </section>
+
+      <section id="view-calendar" class="view" aria-labelledby="calendar-heading" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">HISTORIAL</p><h2 id="calendar-heading">Calendario</h2></div>
+          <div class="month-controls"><button id="previous-month" class="icon-button" type="button" aria-label="Mes anterior">‹</button><button id="next-month" class="icon-button" type="button" aria-label="Mes siguiente">›</button></div>
+        </div>
+        <p id="calendar-month" class="calendar-month"></p>
+        <div class="calendar-weekdays" aria-hidden="true"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+        <div id="calendar-grid" class="calendar-grid" role="grid"></div>
+        <div id="selected-day-detail" class="day-detail"></div>
+      </section>
+
+      <section id="view-medications" class="view" aria-labelledby="medications-heading" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">ORGANIZACIÓN</p><h2 id="medications-heading">Tratamientos</h2></div>
+          <button id="add-medication" class="small-button" type="button">+ Añadir</button>
+        </div>
+        <p class="section-copy">Crea un enlace distinto para cada etiqueta NFC.</p>
+        <div id="medication-list" class="stack"></div>
+      </section>
+
+      <section id="view-settings" class="view" aria-labelledby="settings-heading" hidden>
+        <div class="section-heading"><div><p class="eyebrow">PREFERENCIAS</p><h2 id="settings-heading">Ajustes</h2></div></div>
+        <div class="settings-card"><label for="day-start"><strong>¿Cuándo empieza tu día?</strong></label><p class="muted">Una toma antes de esta hora contará como parte del día anterior.</p><input id="day-start" type="time" value="03:00"></div>
+        <div class="settings-card"><strong>Notificaciones</strong><p id="notification-status" class="muted"></p><button id="enable-notifications" class="secondary-button" type="button">Activar notificaciones</button></div>
+        <div class="settings-card"><strong>Instalar en el móvil</strong><p class="muted">Instala Day Counter para abrirlo como una app y usarlo sin conexión.</p><button id="install-app" class="secondary-button" type="button" hidden>Instalar aplicación</button><p id="install-help" class="muted small">En Android: menú del navegador → Añadir a pantalla de inicio.</p></div>
+        <div class="settings-card"><strong>Copia de seguridad</strong><p class="muted">Los datos solo están guardados en este dispositivo.</p><button id="export-data" class="secondary-button" type="button">Exportar mis datos</button></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegación principal">
+      <button class="nav-item active" type="button" data-view="today" aria-current="page"><span>●</span>Hoy</button>
+      <button class="nav-item" type="button" data-view="calendar"><span>▦</span>Calendario</button>
+      <button class="nav-item" type="button" data-view="medications"><span>✚</span>Tratamientos</button>
+      <button class="nav-item" type="button" data-view="settings"><span>⚙</span>Ajustes</button>
+    </nav>
+  </div>
+
+  <dialog id="medication-dialog">
+    <form id="medication-form" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">TRATAMIENTO</p><h2 id="medication-form-title">Nuevo tratamiento</h2></div><button id="close-medication-dialog" class="icon-button" type="button" aria-label="Cerrar">×</button></div>
+      <input id="medication-id" type="hidden">
+      <label for="medication-name">Nombre</label><input id="medication-name" type="text" maxlength="50" placeholder="Ej. Creatina" required>
+      <label for="medication-instructions">Indicaciones</label><input id="medication-instructions" type="text" maxlength="80" placeholder="Ej. 1 cápsula con agua">
+      <fieldset><legend>Días de toma</legend><div class="day-selector">
+        <label><input type="checkbox" name="schedule-day" value="1" checked><span>L</span></label><label><input type="checkbox" name="schedule-day" value="2" checked><span>M</span></label><label><input type="checkbox" name="schedule-day" value="3" checked><span>X</span></label><label><input type="checkbox" name="schedule-day" value="4" checked><span>J</span></label><label><input type="checkbox" name="schedule-day" value="5" checked><span>V</span></label><label><input type="checkbox" name="schedule-day" value="6" checked><span>S</span></label><label><input type="checkbox" name="schedule-day" value="0" checked><span>D</span></label>
+      </div></fieldset>
+      <label class="toggle-row"><span><strong>Recordarme</strong><small>Si todavía no está registrada</small></span><input id="reminder-enabled" type="checkbox" role="switch"></label>
+      <label id="reminder-time-row" for="reminder-time" hidden>Hora del recordatorio<input id="reminder-time" type="time" value="20:00"></label>
+      <div class="form-actions"><button class="primary-button" type="submit">Guardar tratamiento</button><button id="delete-medication" class="danger-button" type="button" hidden>Eliminar tratamiento</button></div>
     </form>
+  </dialog>
 
-    <p id="error" class="error" role="alert" hidden></p>
-  </main>
+  <dialog id="intake-dialog">
+    <form id="intake-form" method="dialog">
+      <div class="dialog-heading"><h2>Corregir toma</h2><button id="close-intake-dialog" class="icon-button" type="button" aria-label="Cerrar">×</button></div>
+      <input id="intake-medication-id" type="hidden"><input id="intake-day" type="hidden">
+      <label for="intake-time">Hora de la toma</label><input id="intake-time" type="time" required>
+      <button class="primary-button" type="submit">Guardar hora</button><button id="remove-intake" class="danger-button" type="button">Marcar como no tomada</button>
+    </form>
+  </dialog>
 </body>
 </html>

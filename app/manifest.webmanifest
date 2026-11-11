@@ -1,13 +1,13 @@
 {
-  "name": "DayCounter",
-  "short_name": "DayCounter",
-  "description": "Registro diario de la pastilla",
+  "name": "Day Counter · Mis tomas",
+  "short_name": "Day Counter",
+  "description": "Control de medicación y suplementos con registro NFC",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f7f5",
-  "theme_color": "#1b7f4b",
+  "background_color": "#f7f8fc",
+  "theme_color": "#f7f8fc",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }

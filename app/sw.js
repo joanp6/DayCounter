@@ -1,7 +1,7 @@
 // Offline cache for the static files. Stale-while-revalidate: answer instantly
 // from cache (the NFC tap must feel immediate) and refresh the cache in the background.
 
-const CACHE = 'daycounter-v4';
+const CACHE = 'daycounter-v5';
 const FILES = [
   './',
   './index.html',
@@ -48,6 +48,16 @@ self.addEventListener('fetch', (event) => {
         .catch(() => cached);
       event.waitUntil(network.then(() => {}));
       return cached || network;
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const existing = clients.find((client) => 'focus' in client);
+      return existing ? existing.focus() : self.clients.openWindow('./');
     }),
   );
 });

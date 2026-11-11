@@ -1,56 +1,83 @@
-# DayCounter
+# Day Counter
 
-Did I take my pill today? Tap the phone on an NFC tag and know for sure.
+Una PWA móvil para saber qué medicación o suplementos has tomado, a qué hora y qué queda pendiente. Se puede instalar desde el navegador y cada tratamiento puede tener su propia etiqueta NFC.
 
-**Live:** https://joanp6.github.io/DayCounter/
+**Aplicación:** https://joanp6.github.io/DayCounter/
 
-## How it works
+## Funciones
 
-An NFC tag (NTAG213) stuck on a drawer holds the URL `https://joanp6.github.io/DayCounter/?nfc=1`.
-Tapping it with an Android phone opens the page, which:
+- Día personalizable, configurado inicialmente de **03:00 a 03:00**. Una toma registrada a las 02:00 pertenece al día anterior.
+- Varios tratamientos, cada uno con nombre, indicaciones y días de la semana.
+- Un enlace NFC independiente por tratamiento, listo para copiar o compartir.
+- Registro manual o mediante NFC, sin duplicar una toma ya registrada durante el mismo día.
+- Calendario con el historial y las horas de cada toma.
+- Corrección de hora y posibilidad de volver a marcar una toma como pendiente.
+- Recordatorios visibles y notificaciones del sistema cuando la aplicación está abierta.
+- Copia de seguridad de los datos en JSON.
+- Funcionamiento offline e instalación como aplicación PWA.
 
-- records today's intake with the current time if there is none yet → **✅ Registrado hoy a las HH:MM**;
-- otherwise does nothing and shows **Ya registrado hoy a las HH:MM**, with a *Corregir hora* button;
-- removes `?nfc=1` from the URL, so reloading never records twice.
+## Etiquetas NFC
 
-Opening it without the parameter (app icon, reload) only shows today's status, with a manual *Registrar ahora* button.
-One intake per calendar day, in the device's local time zone.
+1. Abre **Tratamientos** en Day Counter.
+2. Añade o edita el tratamiento.
+3. Pulsa **Copiar enlace** en su apartado NFC.
+4. En una aplicación como NFC Tools selecciona *Escribir → Añadir un registro → URL/URI*, pega el enlace y escríbelo en el tag.
 
-## Privacy
+Cada enlace contiene un identificador distinto, por ejemplo:
 
-There is no backend and no analytics. Records live only in the browser's `localStorage` on your phone.
-
-## Stack
-
-Static site served from GitHub Pages: vanilla HTML, CSS and ES modules, with no framework and no build step.
-It's an installable PWA (manifest + service worker with an offline cache).
-
+```text
+https://joanp6.github.io/DayCounter/?take=creatina
 ```
-app/            # published to GitHub Pages
+
+Los tags anteriores con `?nfc=1` continúan funcionando y registran el primer tratamiento de la lista.
+
+## Recordatorios
+
+La aplicación muestra un aviso cuando pasa la hora configurada y la toma sigue pendiente. Si se conceden permisos, también genera una notificación mientras la PWA está abierta o en segundo plano.
+
+Los navegadores móviles no garantizan alarmas exactas cuando una PWA lleva tiempo completamente cerrada. Para recordatorios médicos críticos hará falta una siguiente fase con notificaciones push y backend, o empaquetar la aplicación como nativa.
+
+## Privacidad y datos
+
+No hay backend ni analítica. Todo se guarda en `localStorage` en el dispositivo. La primera apertura migra automáticamente el historial de la versión antigua. Borrar los datos del navegador elimina el historial, por lo que conviene usar **Ajustes → Exportar mis datos** periódicamente.
+
+## Desarrollo
+
+Es una aplicación estática con HTML, CSS y módulos ES, sin framework ni proceso de compilación.
+
+```text
+app/
 ├─ index.html
 ├─ styles.css
 ├─ manifest.webmanifest
 ├─ sw.js
 ├─ icons/
 └─ src/
-   ├─ core.js     # pure logic: dayKey, register, editTime (clock injected)
-   ├─ storage.js  # localStorage adapter (all access in try/catch)
-   └─ main.js     # DOM wiring
+   ├─ core.js
+   ├─ storage.js
+   └─ main.js
 ```
 
-## Setup
+Para ejecutar las pruebas:
 
-1. **Enable Pages:** repo *Settings → Pages → Source: GitHub Actions*. Every push to `main` deploys `app/`.
-2. **Write the tag** with the *NFC Tools* app: *Write → Add a record → URL/URI* → `https://joanp6.github.io/DayCounter/?nfc=1` → *Write*, then hold the NTAG213 tag to the phone. Don't rename the repo afterwards: the URL on the tag would break.
-3. **Install the PWA:** open the URL in Chrome on Android → ⋮ menu → *Add to Home screen* → *Install*.
+```bash
+npm test
+```
 
-Run locally with any static server, for example `npx serve app`.
+Para servirla localmente:
 
-## Limitations
+```bash
+npx serve app
+```
 
-- Clearing Chrome's site data deletes the history.
-- Android only reads NFC tags while the screen is unlocked.
+GitHub Actions publica la carpeta `app/` en GitHub Pages al hacer push a `main`.
 
-## License
+## Limitaciones
+
+- Android solo lee tags NFC con la pantalla desbloqueada.
+- Los datos no se sincronizan todavía entre dispositivos.
+- Los recordatorios con la aplicación totalmente cerrada requieren push o una app nativa.
+
+## Licencia
 
 MIT
